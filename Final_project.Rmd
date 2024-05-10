@@ -1,0 +1,15 @@
+---
+title: "Heart Attack Risk Prediction. Final Project"
+author: "Giselle Rahimi, Pilar Gore, WonJune Lee, Jiwon Jung, Yoon-hye Cho, Sukyoung Yoon"
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+untidied_dataset <- read_csv("heart_attack_prediction_dataset.csv")
+
+```
+
