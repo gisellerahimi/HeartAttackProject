@@ -13,3 +13,69 @@ untidied_dataset <- read_csv("heart_attack_prediction_dataset.csv")
 
 ```
 
+EDA:
+
+```{r}
+no_family_history_dataset <- subset(untidied_dataset, `Family History` == 0)
+```
+
+```{r}
+family_history_dataset <- subset(untidied_dataset, `Family History` == 1)
+```
+
+Use summarize on some variables!
+
+Scatterplot with  exercise hours (x axis) , heart attack risk (y axis) Only among people without family history!
+
+```{r}
+no_family_history_dataset %>%
+  rename(
+    `Heart Attack Risk` = "heart_attack_risk"
+  )
+
+```
+
+```{r}
+no_family_history_dataset %>%
+ggplot() +
+  geom_boxplot(mapping = aes(x = factor(`Heart Attack Risk`), y = `Exercise Hours Per Week`))+
+  labs(title = "PUT TITLE HERE")
+
+```
+```{r}
+no_family_history_dataset %>%
+  group_by(factor(`Heart Attack Risk`)) %>%
+    summarize(
+    median = median(`Exercise Hours Per Week`)
+  )
+```
+
+boxplot -> sleep hours (x axis), heart attack risk (y) (without family history) Only among people without family history!
+
+```{r}
+```
+
+Histogram -> stress level (x), heart attack risk (y)
+```{r}
+```
+
+How can we visualize family history with heart attack risk??
+
+```{r}
+no_family_history_dataset %>%
+  group_by(factor(`Heart Attack Risk`)) %>%
+  summarize(n = n())
+```
+```{r}
+family_history_dataset %>%
+  group_by(factor(`Heart Attack Risk`)) %>%
+  summarize(n = n())
+```
+Explain the significance of the above numbers!!
+```
+
+Tidying:
+
+Remove unwanted columns
+change names of columns so they are more neat
+separate blood pressure into systolic and diastolic
