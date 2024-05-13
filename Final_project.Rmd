@@ -23,14 +23,39 @@ no_family_history_dataset <- subset(untidied_dataset, `Family History` == 0)
 family_history_dataset <- subset(untidied_dataset, `Family History` == 1)
 ```
 
-Use summarize on some variables!
-
-Scatterplot with  exercise hours (x axis) , heart attack risk (y axis) Only among people without family history!
+```{r}
+no_family_history_dataset <- no_family_history_dataset %>%
+select(Age, Sex, Cholesterol, `Blood Pressure`,`Heart Rate`, `Family History`, `Exercise Hours Per Week`,`Stress Level`, `Sleep Hours Per Day`, `Heart Attack Risk`,`Triglycerides`,`Physical Activity Days Per Week`, `Sedentary Hours Per Day`, `Diet`)
+```
 
 ```{r}
-no_family_history_dataset %>%
+no_family_history_dataset <- no_family_history_dataset %>%
   rename(
-    `Heart Attack Risk` = "heart_attack_risk"
+    heart_attack_risk = "Heart Attack Risk",
+    blood_pressure = "Blood Pressure",
+    heart_rate = "Heart Rate",
+    family_history = "Family History",
+    exercise_hrs_week = "Exercise Hours Per Week",
+    stress_level = "Stress Level",
+    sedentary_hrs_day = "Sedentary Hours Per Day",
+    physical_days_week = "Physical Activity Days Per Week",
+    sleep_hrs = "Sleep Hours Per Day",
+    age = "Age",
+    sex = "Sex",
+    cholesterol = "Cholesterol",
+    diet = "Diet",
+    triglycerides = "Triglycerides"
+  )
+
+```
+
+```{r}
+no_family_history_dataset <- no_family_history_dataset %>%
+  separate(
+    col = blood_pressure,
+    into = combine("systolic", "diastolic"),
+    sep = "/",
+    convert = FALSE
   )
 
 ```
@@ -38,34 +63,78 @@ no_family_history_dataset %>%
 ```{r}
 no_family_history_dataset %>%
 ggplot() +
-  geom_boxplot(mapping = aes(x = factor(`Heart Attack Risk`), y = `Exercise Hours Per Week`))+
+  geom_boxplot(mapping = aes(x = factor(heart_attack_risk), y = exercise_hrs_week))+
   labs(title = "PUT TITLE HERE")
 
 ```
 ```{r}
 no_family_history_dataset %>%
-  group_by(factor(`Heart Attack Risk`)) %>%
+  group_by(factor(heart_rate)) %>%
     summarize(
-    median = median(`Exercise Hours Per Week`)
+    median = median(exercise_hrs_week),
+    mean = mean(exercise_hrs_week),
+    max = max(exercise_hrs_week),
+    min = min(exercise_hrs_week)
   )
 ```
 
 boxplot -> sleep hours (x axis), heart attack risk (y) (without family history) Only among people without family history!
+```{r}
+untidied_dataset %>%
+  ggplot() +
+  geom_boxplot(mapping = aes(x = factor(`Heart Attack Risk`), y = `Sleep Hours Per Day`)) +
+  labs(title = "title")
+```
+
+```{r}
+untidied_dataset %>%
+  ggplot() +
+  geom_violin(mapping = aes(x = factor(`Heart Attack Risk`), y = `Sleep Hours Per Day`)) +
+  labs(title = "title")
+```
+
+```{r}
+number_sleep_heart <- no_family_history_dataset %>%
+  count(sleep_hrs, heart_attack_risk)
+```
+
+```{r}
+number_sleep_hrs <- no_family_history_dataset %>%
+  count(sleep_hrs)
+```
+
+```{r}
+number_sleep_hrs %>%
+  ggplot() +
+  geom_line(mapping = aes(x = sleep_hrs, y = n)) 
+```
+```{r}
+number_heart_attack_risk <- no_family_history_dataset %>%
+  count(heart_attack_risk)
+```
+
+```{r}
+number_heart_attack_risk %>%
+  ggplot() +
+  geom_line(mapping = aes(x = heart_attack_risk, y = n))
+```
 
 ```{r}
 ```
 
-Histogram -> stress level (x), heart attack risk (y)
-```{r}
-```
+column graph -> stress level (x), heart attack risk (y)
+if else 
+group_by both 
+count()
 
 How can we visualize family history with heart attack risk??
 
 ```{r}
 no_family_history_dataset %>%
-  group_by(factor(`Heart Attack Risk`)) %>%
+  group_by(factor(heart_attack_risk)) %>%
   summarize(n = n())
 ```
+
 ```{r}
 family_history_dataset %>%
   group_by(factor(`Heart Attack Risk`)) %>%
@@ -77,5 +146,4 @@ Explain the significance of the above numbers!!
 Tidying:
 
 Remove unwanted columns
-change names of columns so they are more neat
 separate blood pressure into systolic and diastolic
