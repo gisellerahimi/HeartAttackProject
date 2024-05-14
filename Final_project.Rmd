@@ -8,6 +8,8 @@ date: "`r Sys.Date()`"
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(modelr)
+library(broom)
 
 untidied_dataset <- read_csv("heart_attack_prediction_dataset.csv")
 
@@ -16,20 +18,12 @@ untidied_dataset <- read_csv("heart_attack_prediction_dataset.csv")
 EDA:
 
 ```{r}
-no_family_history_dataset <- subset(untidied_dataset, `Family History` == 0)
-```
-
-```{r}
-family_history_dataset <- subset(untidied_dataset, `Family History` == 1)
-```
-
-```{r}
-no_family_history_dataset <- no_family_history_dataset %>%
+untidied_dataset <- untidied_dataset %>%
 select(Age, Sex, Cholesterol, `Blood Pressure`,`Heart Rate`, `Family History`, `Exercise Hours Per Week`,`Stress Level`, `Sleep Hours Per Day`, `Heart Attack Risk`,`Triglycerides`,`Physical Activity Days Per Week`, `Sedentary Hours Per Day`, `Diet`)
 ```
 
 ```{r}
-no_family_history_dataset <- no_family_history_dataset %>%
+untidied_dataset <- untidied_dataset %>%
   rename(
     heart_attack_risk = "Heart Attack Risk",
     blood_pressure = "Blood Pressure",
@@ -48,6 +42,15 @@ no_family_history_dataset <- no_family_history_dataset %>%
   )
 
 ```
+
+```{r}
+no_family_history_dataset <- subset(untidied_dataset, family_history == 0)
+```
+
+```{r}
+family_history_dataset <- subset(untidied_dataset, family_history == 1)
+```
+
 
 ```{r}
 no_family_history_dataset <- no_family_history_dataset %>%
@@ -82,14 +85,14 @@ boxplot -> sleep hours (x axis), heart attack risk (y) (without family history) 
 ```{r}
 untidied_dataset %>%
   ggplot() +
-  geom_boxplot(mapping = aes(x = factor(`Heart Attack Risk`), y = `Sleep Hours Per Day`)) +
+  geom_boxplot(mapping = aes(x = factor(heart_attack_risk), y = sleep_hrs)) +
   labs(title = "title")
 ```
 
 ```{r}
 untidied_dataset %>%
   ggplot() +
-  geom_violin(mapping = aes(x = factor(`Heart Attack Risk`), y = `Sleep Hours Per Day`)) +
+  geom_violin(mapping = aes(x = factor(heart_attack_risk), y = sleep_hrs)) +
   labs(title = "title")
 ```
 
@@ -120,6 +123,20 @@ number_heart_attack_risk %>%
 ```
 
 ```{r}
+untidied_dataset <- no_family_history_dataset %>%
+  mutate(
+    count = 
+      ifelse(stress_level >= 1 & !(stress_level >=6) & heart_attack_risk == 1, "no stress & risk",
+      ifelse(stress_level >= 1 & !(stress_level >=6) & heart_attack_risk == 0, "no stress & no risk",
+      ifelse(stress_level >= 6 & heart_attack_risk == 1, "stress & risk",
+      ifelse(stress_level >= 6 & heart_attack_risk == 0, "stress and no risk", NA))))
+  )
+```
+
+```{r}
+untidied_dataset %>%
+  group_by(factor(count)) %>%
+  summarize(n = n())
 ```
 
 column graph -> stress level (x), heart attack risk (y)
@@ -137,13 +154,40 @@ no_family_history_dataset %>%
 
 ```{r}
 family_history_dataset %>%
-  group_by(factor(`Heart Attack Risk`)) %>%
+  group_by(factor(heart_attack_risk)) %>%
   summarize(n = n())
 ```
 Explain the significance of the above numbers!!
+
+
+Modeling:
+
+```{r}
+logistic_model <- glm(
+heart_attack_risk ~ exercise_hrs_week + sleep_hrs + stress_level,
+family = binomial(),
+data = no_family_history_dataset
+)
+
 ```
 
-Tidying:
+```{r}
+logistic_predictions <- no_family_history_dataset %>%
+  add_predictions(
+    logistic_model,
+    type = "response"
+  ) %>%
+  mutate(
+    outcome = if_else( condition = pred >0.5,
+                       true = 1,
+                       false = 0)
+  )
+```
 
-Remove unwanted columns
-separate blood pressure into systolic and diastolic
+```{r}
+logistic_model %>%
+  tidy()
+```
+
+Hypothesis Testing:
+
