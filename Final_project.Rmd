@@ -10,8 +10,16 @@ library(dplyr)
 library(ggplot2)
 library(modelr)
 library(broom)
+library(ggmosaic)
+library(boot)
+library(infer)
 
 untidied_dataset <- read_csv("heart_attack_prediction_dataset.csv")
+
+cost <- function(obs, pred) {
+  outcome <- pred > 0.5
+  return(1 - (sum(obs == outcome) / length(obs)))
+}
 
 ```
 
@@ -176,7 +184,17 @@ logistic_predictions <- no_family_history_dataset %>%
     outcome = if_else( condition = pred >0.5,
                        true = 1,
                        false = 0)
+  )%>%
+  summarize(
+    total_outcome = sum(outcome),
+    accuracy = total_outcome/n()
   )
+```
+
+```{r}
+logistic_cv1 <- cv.glm(no_family_history_dataset, logistic_model, cost, K = 5)
+logistic_cv1$delta
+
 ```
 
 ```{r}
@@ -184,12 +202,10 @@ logistic_model %>%
   tidy()
 ```
 
-```{r}
 
-```
 
 ```{r}
-  untidied_dataset$heart_attack_risk <- as.character(untidied_dataset$heart_attack_risk)
+  no_family_history_dataset$heart_attack_risk <- as.character(no_family_history_dataset$heart_attack_risk)
 
 ```
 
@@ -206,14 +222,14 @@ no_family_history_dataset <- no_family_history_dataset %>%
 ```
 
 ```{r}
-  no_family_history_dataset$stressed_or_not <- as.character(no_family_history_dataset$stressed_or_not)
+  no_family_history_dataset$stress <- as.character(no_family_history_dataset$stress)
 
 ```
 
 
 ```{r}
-heart_attack_risk_null <- untidied_dataset %>%
-  specify(heart_attack_risk ~ stress_or_not, success = "stressed") %>%
+heart_attack_risk_null <- no_family_history_dataset %>%
+  specify(heart_attack_risk ~ stress, success = "1") %>%
   hypothesize(null ="independence") %>%
   generate(reps = 10000, type = "permute") %>%
   calculate(stat = "diff in props", order = c("stressed", "not_stressed"))
@@ -222,12 +238,12 @@ heart_attack_risk_null <- untidied_dataset %>%
 
 ```{r}
 heart_attack_risk_obs_stat <- no_family_history_dataset %>%
-  specify(heart_attack_risk ~ sleep_hrs) %>%
+  specify(heart_attack_risk ~ stress, success = "1") %>%
   calculate(stat = "diff in props")
 ```
 
 ```{r}
-heart_attack_risk_p_value <- no_family_history_datatset %>%
+heart_attack_risk_p_value <- no_family_history_dataset %>%
   get_p_value(obs_stat = heart_attack_risk_obs_stat, direction = "both")
 ```
 
