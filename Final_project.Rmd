@@ -15,7 +15,6 @@ untidied_dataset <- read_csv("heart_attack_prediction_dataset.csv")
 
 ```
 
-EDA:
 
 ```{r}
 untidied_dataset <- untidied_dataset %>%
@@ -139,12 +138,12 @@ untidied_dataset %>%
   summarize(n = n())
 ```
 
-column graph -> stress level (x), heart attack risk (y)
-if else 
-group_by both 
-count()
 
-How can we visualize family history with heart attack risk??
+```{r}
+no_family_history_dataset %>%
+  ggplot()+
+  geom_bar(mapping = aes(x = sleep_hrs)) 
+```
 
 ```{r}
 no_family_history_dataset %>%
@@ -157,10 +156,6 @@ family_history_dataset %>%
   group_by(factor(heart_attack_risk)) %>%
   summarize(n = n())
 ```
-Explain the significance of the above numbers!!
-
-
-Modeling:
 
 ```{r}
 logistic_model <- glm(
@@ -189,5 +184,50 @@ logistic_model %>%
   tidy()
 ```
 
-Hypothesis Testing:
+```{r}
+
+```
+
+```{r}
+  untidied_dataset$heart_attack_risk <- as.character(untidied_dataset$heart_attack_risk)
+
+```
+
+ 
+```{r}
+
+no_family_history_dataset <- no_family_history_dataset %>%
+  mutate(
+    stress =
+      ifelse(stress_level >= 6, "not_stressed",
+      ifelse(stress_level >= 1, "stressed", NA
+  )))
+
+```
+
+```{r}
+  no_family_history_dataset$stressed_or_not <- as.character(no_family_history_dataset$stressed_or_not)
+
+```
+
+
+```{r}
+heart_attack_risk_null <- untidied_dataset %>%
+  specify(heart_attack_risk ~ stress_or_not, success = "stressed") %>%
+  hypothesize(null ="independence") %>%
+  generate(reps = 10000, type = "permute") %>%
+  calculate(stat = "diff in props", order = c("stressed", "not_stressed"))
+
+```
+
+```{r}
+heart_attack_risk_obs_stat <- no_family_history_dataset %>%
+  specify(heart_attack_risk ~ sleep_hrs) %>%
+  calculate(stat = "diff in props")
+```
+
+```{r}
+heart_attack_risk_p_value <- no_family_history_datatset %>%
+  get_p_value(obs_stat = heart_attack_risk_obs_stat, direction = "both")
+```
 
